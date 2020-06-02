@@ -79,11 +79,13 @@ public class RepositoryManager {
 
     void addConfiguredRepository(String repositoryId, ConfiguredRepository configuredRepository) {
         RepositoryWrapper repositoryHolder = new ConfiguredRepositoryWrapper(repositoryId, configuredRepository);
+        Tr.info(tc, "addConfiguredRepository() - " + repositoryId + " Repositories: " + new HashMap(repositories));
         addRepository(repositoryId, repositoryHolder);
     }
 
     void addCustomRepository(String repositoryId, CustomRepository customRepository) {
         RepositoryWrapper repositoryHolder = new CustomRepositoryWrapper(repositoryId, customRepository);
+        Tr.info(tc, "addCustomRepository() - " + repositoryId + " Repositories: " + new HashMap(repositories));
         addRepository(repositoryId, repositoryHolder);
     }
 
@@ -101,6 +103,7 @@ public class RepositoryManager {
     void addUserRegistry(UserRegistry userRegistry) {
         try {
             UserRegistryWrapper repositoryHolder = new UserRegistryWrapper(userRegistry, vmmService.getConfigManager());
+            Tr.info(tc, "addUserRegistry() - " + userRegistry.getRealm() + " Repositories: " + new HashMap(repositories));
             addRepository(userRegistry.getRealm(), repositoryHolder);
 
         } catch (InitializationException e) {
@@ -124,8 +127,19 @@ public class RepositoryManager {
     public Repository getRepository(String instanceId) {
         RepositoryWrapper repositoryHolder = repositories.get(instanceId);
         if (repositoryHolder != null) {
-            return repositoryHolder.getRepository();
+            Repository repo = repositoryHolder.getRepository();
+            
+            if (repo == null && tc.isInfoEnabled()) {
+                Tr.info(tc, "getRepository() - no repository for " + instanceId + " Repositories: " + repositories);
+            }
+
+            return repo;
         }
+
+        if (tc.isInfoEnabled()) {
+            Tr.info(tc, "getRepository() - no repositoryHolder for " + instanceId + " Repositories: " + repositories);
+        }
+
         return null;
     }
 
