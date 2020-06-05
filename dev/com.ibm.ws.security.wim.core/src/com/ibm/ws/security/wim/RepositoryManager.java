@@ -79,13 +79,17 @@ public class RepositoryManager {
 
     void addConfiguredRepository(String repositoryId, ConfiguredRepository configuredRepository) {
         RepositoryWrapper repositoryHolder = new ConfiguredRepositoryWrapper(repositoryId, configuredRepository);
-        Tr.info(tc, "addConfiguredRepository() - " + repositoryId + " Repositories: " + new HashMap(repositories));
+        Tr.info(tc, "addConfiguredRepository() - " 
+            + repositoryId + "=" + configuredRepository + " of " + configuredRepository.getClass().getName() 
+            + " Repositories: " + new HashMap(repositories));
         addRepository(repositoryId, repositoryHolder);
     }
 
     void addCustomRepository(String repositoryId, CustomRepository customRepository) {
         RepositoryWrapper repositoryHolder = new CustomRepositoryWrapper(repositoryId, customRepository);
-        Tr.info(tc, "addCustomRepository() - " + repositoryId + " Repositories: " + new HashMap(repositories));
+        Tr.info(tc, "addCustomRepository() - " 
+            + repositoryId + "=" + customRepository + " of " + customRepository.getClass().getName() 
+            + " Repositories: " + new HashMap(repositories));
         addRepository(repositoryId, repositoryHolder);
     }
 
@@ -97,13 +101,18 @@ public class RepositoryManager {
      */
     private void addRepository(String repositoryId, RepositoryWrapper repositoryHolder) {
         repositories.put(repositoryId, repositoryHolder);
+        Tr.info(tc, "addRepository() - " + repositoryId
+            + " Repositories(after): " + new HashMap(repositories));
         numRepos = getNumberOfRepositories();
     }
 
     void addUserRegistry(UserRegistry userRegistry) {
         try {
             UserRegistryWrapper repositoryHolder = new UserRegistryWrapper(userRegistry, vmmService.getConfigManager());
-            Tr.info(tc, "addUserRegistry() - " + userRegistry.getRealm() + " Repositories: " + new HashMap(repositories));
+            Tr.info(tc, "addUserRegistry() - " 
+                + userRegistry.getRealm() + "=" + userRegistry + " of " + userRegistry.getClass().getName() 
+                + " configManager=" + vmmService.getConfigManager()
+                + " Repositories: " + new HashMap(repositories));
             addRepository(userRegistry.getRealm(), repositoryHolder);
 
         } catch (InitializationException e) {
@@ -116,6 +125,8 @@ public class RepositoryManager {
         if (repositoryHolder != null) {
             repositoryHolder.clear();
         }
+        Tr.info(tc, "removeRepositoryHolder() - " + id
+            + " Repositories(after): " + new HashMap(repositories));
         numRepos = getNumberOfRepositories();
     }
 
@@ -130,14 +141,14 @@ public class RepositoryManager {
             Repository repo = repositoryHolder.getRepository();
             
             if (repo == null && tc.isInfoEnabled()) {
-                Tr.info(tc, "getRepository() - no repository for " + instanceId + " Repositories: " + repositories);
+                Tr.info(tc, "getRepository() - found repositoryHolder with null repo for " + instanceId + " Repositories: " + new HashMap(repositories));
             }
 
             return repo;
         }
 
         if (tc.isInfoEnabled()) {
-            Tr.info(tc, "getRepository() - no repositoryHolder for " + instanceId + " Repositories: " + repositories);
+            Tr.info(tc, "getRepository() - no repositoryHolder for " + instanceId + " Repositories: " + new HashMap(repositories));
         }
 
         return null;
@@ -187,10 +198,18 @@ public class RepositoryManager {
                 }
             }
         } else {
+            if (tc.isInfoEnabled()) {
+                Tr.info(tc, "getRepositoryIdByUniqueName() - no realmConfig for " + realmName + "[" + uniqueName + "]");
+            }
+
             /*
              * There is no explicitly configured realm. Use all base entries.
              */
             baseEntries = repositories.entrySet();
+        }
+
+        if (tc.isInfoEnabled()) {
+            Tr.info(tc, "getRepositoryIdByUniqueName() - baseEntries=" + baseEntries);
         }
 
         for (Entry<String, RepositoryWrapper> entry : baseEntries) {
@@ -331,6 +350,10 @@ public class RepositoryManager {
 
     //TODO not tested.
     public Set<String> getRepositoriesForGroupMembership(String repositoryId) throws WIMException {
+        if (tc.isInfoEnabled()) {
+            Tr.info(tc, "getRepositoriesForGroupMembership[untested]() - " + repositoryId + " Repositories: " + new HashMap(repositories));
+        }
+
         RepositoryWrapper repositoryHolder = repositories.get(repositoryId);
         if (repositoryHolder != null) {
             return repositoryHolder.getRepositoryGroups();
@@ -374,6 +397,9 @@ public class RepositoryManager {
      */
     public void clearAllCachedURRepositories() {
         for (RepositoryWrapper repositoryHolder : repositories.values()) {
+            if (tc.isInfoEnabled()) {
+                Tr.info(tc, "clearAllCachedURRepositories() - limpando " + repositoryHolder + " Repositories: " + new HashMap(repositories));
+            }
             repositoryHolder.clear();
         }
     }
@@ -404,7 +430,13 @@ public class RepositoryManager {
      * @return The realm set for the current thread.
      */
     public static String getRealmOnThread() {
-        return realmNameTLStack.get().peek();
+        String realmName = realmNameTLStack.get().peek();
+
+        if (tc.isInfoEnabled()) {
+            Tr.info(tc, "getRealmOnThread() - realmName=" + realmName + " @" + Thread.currentThread().getName());
+        }
+
+        return realmName;
     }
 
     /**
@@ -423,6 +455,10 @@ public class RepositoryManager {
 
         LinkedList<String> stack = realmNameTLStack.get();
         stack.push(realmName);
+
+        if (tc.isInfoEnabled()) {
+            Tr.info(tc, "setRealmOnThread() - " + realmName + " @" + Thread.currentThread().getName());
+        }
 
         if (tc.isDebugEnabled()) {
             Tr.debug(tc, METHODNAME + " realmName=" + realmName + ", size=" + stack.size());
